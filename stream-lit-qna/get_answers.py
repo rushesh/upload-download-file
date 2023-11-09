@@ -10,7 +10,7 @@ from langchain.document_loaders import PyPDFLoader
 import os
 import nltk
 
-os.environ["OPENAI_API_KEY"] = "sk-DVX8nCKmz461rfL9eEbYT3B1bkFJuVD4nuWZ6cTqog™2NVH0"
+os.environ["OPENAI_API_KEY"] = ""
 embeddings = OpenAIEmbeddings()
 
 query = "why is the self-attention approach used in this document?"
@@ -28,15 +28,16 @@ def get_file_content(fileName, file):
     return document_content
 
 def doc_answer(file_name, file_path):
-    print(f"File Name - {file_name} - file path - {file_path}")
-    file_content=get_file_content(file_name, file_path)
-    print(f"file content")
-    updated_file_content=file_content
+    # print(f"File Name - {file_name} - file path - {file_path}")
+    # file_content=get_file_content(file_name, file_path)
+    # print(f"file content")
+    # updated_file_content=file_content
     text_splitter = CharacterTextSplitter(
         separator="\n\n", chunk_size=1000, chunk_overlap=200, length_function=len
     )
-    print(f"TYPE OF CONTENT  - {type(updated_file_content)}")
-    text_splitter = text_splitter.split_text(updated_file_content)
+    file_content_new = file_path[:60:]
+    print(f"TYPE OF CONTENT  - {type(file_content_new)} - lenght is - {len(file_content_new)}")
+    text_splitter = text_splitter.split_text(file_content_new)
     document_search = FAISS.from_texts(text_splitter, embeddings)
     documents = document_search.similarity_search(query)
     results = chain(

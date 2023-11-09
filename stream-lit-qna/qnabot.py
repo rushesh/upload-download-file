@@ -42,7 +42,7 @@ if uploaded_file is not None:
         else:
             st.write("Asking your question...")
 
-            doc_answer(uploaded_file.name,file_path)
+            answer=doc_answer(uploaded_file.name,pdf_content)
 
             # answer = response.choices[0].text.strip()
             st.write(f"Answer: {answer}")
