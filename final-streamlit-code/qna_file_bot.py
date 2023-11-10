@@ -18,10 +18,8 @@ from langchain.document_loaders import PyPDFLoader
 import os
 # import nltk
 
-os.environ["OPENAI_API_KEY"] = ""
+os.environ["OPENAI_API_KEY"] = "test_api_key"
 embeddings = OpenAIEmbeddings()
-
-query = "what is the document text about?"
 chain = load_qa_chain(OpenAI(), chain_type="map_rerank", return_intermediate_steps=True)
 
 def get_file_content(fileName, file):
@@ -34,7 +32,9 @@ def get_file_content(fileName, file):
     print("returning from func - get_file_content")
     return document_content
 
-def doc_answer(file_name, file_path):
+def doc_answer(file_name, file_content, question_query):
+
+    # if runnning this was to extract data pass location i.e.
     # print(f"File Name - {file_name} - file path - {file_path}")
     # file_content=get_file_content(file_name, file_path)
     # print(f"file content")
@@ -42,13 +42,13 @@ def doc_answer(file_name, file_path):
     text_splitter = CharacterTextSplitter(
         separator="\n\n", chunk_size=1000, chunk_overlap=200, length_function=len
     )
-    file_content_new = file_path[:60:]
+    file_content_new = file_content[:60:]
     print(f"TYPE OF CONTENT  - {type(file_content_new)} - lenght is - {len(file_content_new)}")
     text_splitter = text_splitter.split_text(file_content_new)
     document_search = FAISS.from_texts(text_splitter, embeddings)
-    documents = document_search.similarity_search(query)
+    documents = document_search.similarity_search(question_query)
     results = chain(
-        {"input_documents": documents, "question": query}, return_only_outputs=True
+        {"input_documents": documents, "question": question_query}, return_only_outputs=True
     )
     answers = results["intermediate_steps"][0]
     return answers
@@ -67,13 +67,12 @@ def save_uploaded_file(uploaded_file, folder_path):
 
 
 
-st.write("Company Name")
-st.title("PDF Question Answering using Generative AI")
+st.title("QNA using doc")
+st.header('Company Name', divider='rainbow')
 
 uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
 
 if uploaded_file is not None:
-    st.write("PDF file uploaded successfully! Now you can ask questions based on the content of the document.")
     pdf_content = ""
     save_uploaded_file(uploaded_file, folder_path)
     file_path = os.path.join(folder_path, uploaded_file.name)
@@ -81,15 +80,21 @@ if uploaded_file is not None:
         pdf_reader = PdfReader(data)
         for page in range(len(pdf_reader.pages)):
             pdf_content += pdf_reader.pages[page].extract_text()
-    question = st.text_input("Enter your question:")
+    st.text(f"{uploaded_file.name} uploaded successfully")
+    st.divider()
+    st.markdown(''':red[File] :orange[content] :green[is] :blue[:]''')
+    st.text(pdf_content)
+    st.divider()
+    question = st.text_input("Enter your question:", max_chars=30, help="Max number of characters is 30.")
     if st.button("Submit"):
         if not question:
-            st.warning("Please enter a question.")
+            st.markdown(''':red[Enter] :violet[your] :green[question]''')
         else:
-            st.write("Asking your question...")
-            answer=doc_answer(uploaded_file.name,pdf_content)
+            st.text("Asking your question...")
+            question_query=question
+            print(f"Question by user is - {question}")
+            answer=doc_answer(uploaded_file.name,pdf_content, question_query)
             print(f"answer - {answer}")
-            # answer = response.choices[0].text.strip()
             st.write(f"Answer: {answer}")
 else:
-    st.write("Please upload a PDF file.")
+    st.text("Please upload a PDF file.")
